@@ -115,6 +115,7 @@ import { useSeancesStore } from '~/stores/seances'
 import { useCinemasStore } from '~/stores/cinemas'
 import { storeToRefs } from 'pinia'
 import TheNavbar from '~/components/TheNavbar.vue'
+import { generateMeta } from '~/utils/seo'
 
 const route = useRoute()
 const store = useSeancesStore()
@@ -207,5 +208,45 @@ const trailerEmbedUrl = computed(() => {
   if (!videoId) return null
   
   return `https://www.youtube.com/embed/${videoId}`
+})
+
+// SEO metadata
+useHead(() => ({
+  title: film.value ? `${film.value.titre} - Séances à Toulouse | Cinéphoria` : 'Film - Cinéphoria',
+  meta: generateMeta({
+    title: film.value ? `${film.value.titre} - Séances à Toulouse | Cinéphoria` : 'Film - Cinéphoria',
+    description: film.value ? 
+      `Retrouvez les horaires des séances de ${film.value.titre} dans les cinémas de Toulouse. ${film.value.synopsis?.slice(0, 150)}...` : 
+      defaultMeta.description,
+    image: film.value?.poster || defaultMeta.image,
+    url: `https://cinephoria.fr/films/${filmId}`
+  })
+}))
+
+// Schema.org markup
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      children: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Movie',
+        name: film.value?.titre,
+        image: film.value?.poster,
+        description: film.value?.synopsis,
+        duration: `PT${film.value?.duree}M`,
+        aggregateRating: film.value?.note ? {
+          '@type': 'AggregateRating',
+          ratingValue: film.value.note,
+          bestRating: '10',
+          worstRating: '0',
+        } : undefined,
+        trailer: film.value?.trailer_url ? {
+          '@type': 'VideoObject',
+          embedUrl: trailerEmbedUrl.value
+        } : undefined
+      })
+    }
+  ]
 })
 </script> 

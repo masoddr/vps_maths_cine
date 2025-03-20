@@ -4,8 +4,8 @@
       <div class="content-wrapper">
         <div class="hero-content">
           <h1 class="fade-in">
-            Découvrez le cinéma
-            <span class="accent">à Toulouse</span>
+            Cinéma à Toulouse
+            <span class="accent">Toutes les séances en un clic</span>
           </h1>
           <p class="subtitle fade-in-delay">
             Explorez toute la programmation des salles toulousaines en un seul endroit. 
@@ -40,6 +40,8 @@
 </template>
 
 <script setup lang="ts">
+import { generateMeta } from '~/utils/seo'
+
 onMounted(() => {
   // Effet parallaxe au défilement
   const handleScroll = () => {
@@ -57,6 +59,37 @@ onMounted(() => {
     window.removeEventListener('scroll', handleScroll);
   });
 });
+
+useHead({
+  title: 'Cinéma Toulouse - Toutes les séances et films à l\'affiche | Cinéphoria',
+  meta: generateMeta({
+    title: 'Cinéma Toulouse - Toutes les séances et films à l\'affiche | Cinéphoria',
+    description: 'Trouvez toutes les séances de cinéma à Toulouse : films à l\'affiche, horaires des séances, cinémas toulousains. Le guide complet du cinéma à Toulouse.',
+    url: 'https://cinephoria.fr'
+  }),
+  script: [
+    {
+      type: 'application/ld+json',
+      children: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'Cinéphoria Toulouse',
+        url: 'https://cinephoria.fr',
+        description: 'Guide des cinémas et séances de films à Toulouse',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Toulouse',
+          addressRegion: 'Occitanie',
+          addressCountry: 'FR'
+        },
+        areaServed: {
+          '@type': 'City',
+          name: 'Toulouse'
+        }
+      })
+    }
+  ]
+})
 </script>
 
 <style scoped>
