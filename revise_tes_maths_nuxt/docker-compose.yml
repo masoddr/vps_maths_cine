@@ -29,7 +29,8 @@ services:
       - "traefik.http.routers.backend-static.entrypoints=websecure"
       - "traefik.http.routers.backend-static.tls=true"
       - "traefik.http.routers.backend-static.service=backend"
-    network_mode: "host"
+    networks:
+      - default
 
   db:
     image: postgres:15.6
