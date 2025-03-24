@@ -1,1 +1,1 @@
-0 1 * * * cd /app && python scripts/update_seances.py >> /var/log/cron.log 2>&1 
+0 1 * * * cd /app && python scripts/update_seances.py >> /var/log/cron.log 2>&1
