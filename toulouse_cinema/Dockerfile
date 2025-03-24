@@ -12,7 +12,7 @@ WORKDIR /app
 COPY . .
 
 # Installation des dépendances Python
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r scripts/requirements.txt
 
 # Configuration de cron
 COPY crontab /etc/cron.d/update-seances
