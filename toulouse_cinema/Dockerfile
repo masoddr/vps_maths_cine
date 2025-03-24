@@ -11,6 +11,11 @@ WORKDIR /app
 # Copie des fichiers du projet
 COPY . .
 
+# Vérification du contenu
+RUN ls -la && \
+    ls -la scripts/ && \
+    pwd
+
 # Installation des dépendances Python
 RUN pip install --no-cache-dir -r scripts/requirements.txt
 
