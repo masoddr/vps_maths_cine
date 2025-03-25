@@ -73,7 +73,7 @@
 
         <h1 class="text-3xl font-bold mb-8">Programme des séances</h1>
         
-        <div v-if="filteredDayFilms.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        <div v-if="filteredDayFilms.length > 0" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4">
           <NuxtLink
             v-for="film in sortedMovies"
             :key="film.tmdb_id"
@@ -83,18 +83,18 @@
             <!-- Image avec overlay au survol -->
             <div class="relative">
               <img :src="film.poster" :alt="film.titre" 
-                   class="w-full h-[360px] object-cover">
+                   class="w-full aspect-[2/3] object-cover">
               <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               </div>
             </div>
             
             <!-- Informations du film -->
-            <div class="p-4">
-              <h3 class="font-bold text-lg mb-2 group-hover:text-blue-600 transition-colors">
+            <div class="p-2 sm:p-3 md:p-4">
+              <h3 class="font-bold text-sm sm:text-base md:text-lg mb-1 sm:mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
                 {{ film.titre }}
               </h3>
 
-              <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
+              <div class="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">
                 <span>{{ formatDuration(film.duree) }}</span>
                 <span v-if="film.note" class="flex items-center">
                   <span class="text-yellow-400">★</span>
@@ -103,9 +103,9 @@
               </div>
 
               <!-- Séances par cinéma -->
-              <div class="space-y-3">
+              <div class="space-y-2 sm:space-y-3">
                 <div 
-                  v-for="(seances, cinema) in filmSeancesByCinema(film.tmdb_id)" 
+                  v-for="(seances, cinema, index) in limitedSeances(filmSeancesByCinema(film.tmdb_id))" 
                   :key="cinema"
                   class="border-t pt-2"
                 >
@@ -121,7 +121,7 @@
                   </h4>
                   <div class="flex flex-wrap gap-1.5">
                     <div
-                      v-for="seance in seances"
+                      v-for="seance in seances.slice(0, 4)"
                       :key="seance.heure"
                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm transition-colors"
                       :style="{
@@ -138,7 +138,23 @@
                         {{ seance.version }}
                       </span>
                     </div>
+                    <div 
+                      v-if="seances.length > 4"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-sm bg-gray-100 text-gray-600"
+                    >
+                      +{{ seances.length - 4 }}
+                    </div>
                   </div>
+                </div>
+                
+                <!-- Badge pour indiquer d'autres cinémas -->
+                <div 
+                  v-if="Object.keys(filmSeancesByCinema(film.tmdb_id)).length > 1"
+                  class="mt-2 inline-flex items-center px-2 py-1 rounded-full text-sm bg-blue-50 text-blue-600"
+                >
+                  <span class="font-medium">
+                    +{{ Object.keys(filmSeancesByCinema(film.tmdb_id)).length - 1 }} autres cinémas
+                  </span>
                 </div>
               </div>
             </div>
@@ -260,6 +276,13 @@ const sortedMovies = computed(() => {
   return filteredDayFilms.value
 })
 
+// Fonction pour limiter l'affichage à un seul cinéma
+function limitedSeances(seances: Record<string, any[]>) {
+  const firstCinema = Object.keys(seances)[0]
+  if (!firstCinema) return {}
+  return { [firstCinema]: seances[firstCinema] }
+}
+
 onMounted(() => {
   store.fetchSeances()
 })
@@ -300,5 +323,47 @@ button:focus {
   font-size: 0.9em;
   color: #666;
   margin: 4px 0;
+}
+
+/* Ajout de styles pour uniformiser la taille des cards */
+.movie-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.movie-card > div:last-child {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hauteur fixe pour la section des séances */
+.space-y-3 {
+  min-height: 80px;
+  max-height: 80px;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .space-y-3 {
+    min-height: 90px;
+    max-height: 90px;
+  }
+}
+
+@media (min-width: 768px) {
+  .space-y-3 {
+    min-height: 100px;
+    max-height: 100px;
+  }
+}
+
+/* Ajustements pour les badges de séances en responsive */
+.rounded-full {
+  @media (max-width: 640px) {
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+  }
 }
 </style> 

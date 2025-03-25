@@ -11,26 +11,105 @@ import os
 from scripts.get_tmdb_data import search_movie_tmdb
 import time
 
-try:
-    from allocineAPI.allocineAPI import allocineAPI
-except ImportError as e:
-    logger = logging.getLogger(__name__)
-    logger.error(f"Impossible d'importer allocineAPI: {e}")
-    class allocineAPI:
-        def get_showtime(self, id_cinema, date_str):
-            url = f"https://www.allocine.fr/_/showtimes/theater-{id_cinema}/{date_str}"
-            response = requests.get(url)
-            return response.json()
-
 logger = logging.getLogger(__name__)
+
+class AllocineAPI:
+    def get_showtime(self, id_cinema, date_str):
+        """Version modifiée qui traite directement la réponse JSON"""
+        url = f"https://www.allocine.fr/_/showtimes/theater-{id_cinema}/d-{date_str}/p-1/"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        response = requests.get(url, headers=headers)
+        
+        logger.debug(f"URL appelée: {url}")
+        logger.debug(f"Status code: {response.status_code}")
+        
+        if response.status_code != 200:
+            return []
+        
+        try:
+            data = response.json()
+            if not data or 'results' not in data:
+                logger.debug(f"Pas de résultats dans la réponse. Contenu: {data}")
+                return []
+            
+            movies = []
+            for movie_data in data.get('results', []):
+                if not movie_data or 'movie' not in movie_data:
+                    logger.debug(f"Données de film invalides: {movie_data}")
+                    continue
+                
+                movie = movie_data['movie']
+                
+                # Debug de la structure complète
+                logger.debug(f"Structure complète du movie_data: {json.dumps(movie_data, indent=2)}")
+                
+                # Extraire le titre depuis la structure appropriée
+                title = None
+                if isinstance(movie, dict):
+                    if 'title' in movie:
+                        title = movie['title']
+                    elif 'originalTitle' in movie:
+                        title = movie['originalTitle']
+                    elif 'data' in movie and isinstance(movie['data'], dict):
+                        title = movie['data'].get('title')
+                
+                if not title:
+                    logger.warning(f"Impossible de trouver le titre pour: {movie}")
+                    continue
+                
+                # Récupérer toutes les séances depuis les différentes catégories
+                all_showtimes = []
+                
+                # Vérifier si nous avons la nouvelle structure avec l'objet showtimes
+                if 'showtimes' in movie_data:
+                    showtimes_obj = movie_data['showtimes']
+                    if isinstance(showtimes_obj, dict):
+                        # Parcourir toutes les catégories de séances
+                        for category in ['dubbed', 'original', 'local', 'multiple']:
+                            if category in showtimes_obj:
+                                all_showtimes.extend(showtimes_obj[category])
+                    else:
+                        # Ancien format où showtimes est une liste
+                        all_showtimes.extend(movie_data['showtimes'])
+                
+                # Traiter les horaires trouvés
+                movie_showtimes = []
+                for showtime in all_showtimes:
+                    if isinstance(showtime, dict):
+                        start_time = showtime.get('startsAt')
+                        # Détecter la version en fonction de la catégorie ou du champ diffusionVersion
+                        version = showtime.get('diffusionVersion', 'LOCAL')
+                        if start_time:
+                            movie_showtimes.append({
+                                'startsAt': start_time,
+                                'diffusionVersion': version
+                            })
+                
+                if movie_showtimes:  # N'ajouter que si nous avons des horaires
+                    movies.append({
+                        'title': title,
+                        'showtimes': movie_showtimes
+                    })
+                else:
+                    logger.warning(f"Aucun horaire trouvé pour le film: {title}")
+            
+            logger.debug(f"Films extraits: {json.dumps(movies, indent=2)}")
+            return movies
+            
+        except Exception as e:
+            logger.error(f"Erreur lors du parsing JSON: {str(e)}")
+            logger.debug(f"Contenu qui a causé l'erreur: {response.text[:500]}...")
+            return []
 
 class AllocineScraper(BaseScraper):
     def __init__(self):
         self.cinemas = CINEMAS
-        self.api = allocineAPI()
+        self.api = AllocineAPI()  # Utiliser notre propre implémentation
         self.base_url = "https://www.allocine.fr"
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
 
     def clean_title(self, title):
@@ -210,12 +289,6 @@ class AllocineScraper(BaseScraper):
                         existing_seance = next(s for s in all_seances if s['titre'] == titre)
                         poster_url = existing_seance['poster']
                         synopsis = existing_seance.get('synopsis', '')
-
-                    # Convertir les caractères encodés en UTF-8
-                    try:
-                        titre = bytes(titre, 'latin1').decode('unicode-escape').encode('latin1').decode('utf-8')
-                    except Exception as e:
-                        logger.warning(f"Erreur lors du décodage du titre '{titre}': {e}")
 
                     # Pour chaque séance du film
                     for seance in movie.get('showtimes', []):
