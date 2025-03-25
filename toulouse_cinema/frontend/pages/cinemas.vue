@@ -189,6 +189,8 @@ function closeTarifsModal(cinemaId) {
   height: 500px;
   width: 100%;
   margin: 20px 0;
+  position: relative;
+  z-index: 1;
 }
 
 .leaflet-container {
@@ -282,5 +284,15 @@ function closeTarifsModal(cinemaId) {
 
 .tarif-section {
   margin-bottom: 15px;
+}
+
+:deep(.leaflet-pane),
+:deep(.leaflet-control) {
+  z-index: 1 !important;
+}
+
+:deep(.leaflet-top),
+:deep(.leaflet-bottom) {
+  z-index: 1 !important;
 }
 </style> 
