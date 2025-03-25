@@ -22,8 +22,8 @@ RUN pip install --no-cache-dir -r scripts/requirements.txt
 # Configuration de cron
 COPY crontab /etc/cron.d/update-seances
 RUN chmod 0644 /etc/cron.d/update-seances && \
-    crontab /etc/cron.d/update-seances && \
-    touch /var/log/cron.log
+    touch /var/log/cron.log && \
+    chmod 0666 /var/log/cron.log
 
 # Script d'entrée
 COPY docker-entrypoint.sh /
