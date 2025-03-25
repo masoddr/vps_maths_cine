@@ -3,15 +3,35 @@
     <TheNavbar />
     
     <div v-if="film" class="container mx-auto px-4 py-8">
-      <div class="flex flex-col md:flex-row gap-8">
-        <!-- Poster -->
-        <img :src="film.poster" :alt="film.titre" 
-             class="w-64 h-96 object-cover rounded-lg shadow-lg shrink-0">
+      <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Poster (caché sur mobile) -->
+        <img 
+          :src="film.poster" 
+          :alt="film.titre" 
+          class="hidden lg:block w-64 h-96 object-cover rounded-lg shadow-lg shrink-0"
+        >
         
+        <!-- Informations du film -->
         <div class="flex-1">
-          <h1 class="text-3xl font-bold mb-4">{{ film.titre }}</h1>
+          <!-- En-tête mobile avec petite image -->
+          <div class="flex items-center gap-4 mb-6 lg:hidden">
+            <img 
+              :src="film.poster" 
+              :alt="film.titre" 
+              class="w-20 h-30 object-cover rounded-lg shadow-md"
+            >
+            <div>
+              <h1 class="text-2xl font-bold">{{ film.titre }}</h1>
+              <div v-if="film.note" class="flex items-center mt-2">
+                <span class="text-yellow-500">★</span>
+                <span class="ml-1">{{ film.note.toFixed(1) }}/10</span>
+              </div>
+            </div>
+          </div>
 
-          
+          <!-- Titre version desktop -->
+          <h1 class="hidden lg:block text-3xl font-bold mb-4">{{ film.titre }}</h1>
+
           <div class="mb-6">
             <p class="text-gray-600"><strong><u>Durée</u></strong> : {{ formatDuration(film.duree) }}</p>
             <p class="text-gray-600"><strong><u>Date de sortie</u></strong> : {{ formatDate(film.date_sortie) }}</p>
@@ -249,4 +269,14 @@ useHead({
     }
   ]
 })
-</script> 
+</script>
+
+<style scoped>
+/* Ajout des styles pour l'affichage responsive */
+@media (max-width: 1023px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+</style> 
