@@ -6,12 +6,17 @@ echo "Starting entrypoint script..."
 # Vérifier les permissions
 ls -l /etc/cron.d/update-seances
 cat /etc/cron.d/update-seances
+
+# Installer le crontab
+echo "Installing crontab..."
+crontab /etc/cron.d/update-seances
+
 echo "Crontab configuration:"
 crontab -l
 
-# Démarrer cron en arrière-plan
+# Démarrer cron en premier plan
 echo "Starting cron daemon..."
-/usr/sbin/cron
+cron -f
 
 # Exécuter le script une première fois au démarrage
 echo "Running initial script execution..."
