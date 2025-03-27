@@ -30,7 +30,7 @@ import json
 # Ajouter le répertoire parent au PYTHONPATH
 sys.path.append(str(Path(__file__).parent.parent))
 
-from scrapers.allocine import AllocineScraper
+from scripts.scrapers.allocine import AllocineScraper
 from get_tmdb_data import update_seances_with_tmdb_data
 
 logging.basicConfig(level=logging.INFO)
